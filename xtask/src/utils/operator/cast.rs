@@ -1,4 +1,4 @@
-﻿use super::{Content, DataPromise, Operator};
+use super::{Content, DataPromise, Operator};
 use ggus::{
     ggml_quants::{bf16, f16, QuantExt, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1},
     DataFuture, GGmlType as Ty, GGufMetaMapExt,
@@ -28,15 +28,17 @@ impl Operator {
 impl Content<'_> {
     pub(super) fn cast(&mut self, types: HashMap<String, Ty>) {
         match self.general_architecture().unwrap() {
-            "llama" => {
+            "llama" | "gpt2" => {
                 let [mat, embd, norm, else_] =
                     ["mat", "embd", "norm", "else"].map(|name| types.get(name).copied());
                 self.cast_(mat, |name, shape| {
                     if matches!(name, "token_embd.weight" | "output.weight") {
                         embd
-                    } else if name.ends_with("_norm.weight") {
+                    } else if name.ends_with("_norm.weight") || name.ends_with("_norm.bias") {
                         norm
-                    } else if shape.len() > 1 {
+                    } else if shape.len() > 1
+                        || (name.ends_with(".bias") && !name.ends_with("_norm.bias"))
+                    {
                         mat
                     } else {
                         else_
