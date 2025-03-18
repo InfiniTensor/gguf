@@ -19,6 +19,7 @@ types = ["digit-layout"]
 digit-layout = { version = "0.3", optional = true }
 rayon = "1.10"
 half = "2.4"
+itertools = "0.13.0"
 
 [dev-dependencies]
 rand = "0.9"
