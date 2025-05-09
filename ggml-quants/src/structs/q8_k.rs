@@ -3,10 +3,14 @@ use crate::{DataBlock, Quantize};
 use half::f16;
 use std::iter::zip;
 
+/// Q8K 量化结构体
 #[repr(C)]
 pub struct Q8K {
+    /// 缩放因子
     pub delta: f16,
+    /// 量化值
     pub quants: [i8; _256],
+    /// 量化和
     pub sums: [i16; _256 / 16],
 }
 
@@ -21,6 +25,7 @@ impl_data_block! {
 
 impl Quantize<f32, _256> for Q8K {
     fn quantize(data: &[f32; _256]) -> Self {
+        // 验证块大小是否正确，需要对常量进行断言
         #[allow(clippy::assertions_on_constants)]
         const {
             assert!(Self::COUNT == _256)
@@ -53,4 +58,9 @@ impl Quantize<f32, _256> for Q8K {
         let delta = self.delta.to_f32();
         self.quants.map(|x| x as f32 * delta)
     }
+}
+
+#[test]
+fn test_q8_k() {
+    crate::test_utils::test::<256, Q8K>(4.5e-3, 0.);
 }

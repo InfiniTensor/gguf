@@ -2,11 +2,16 @@
 use crate::{DataBlock, Quantize};
 use half::f16;
 
+/// Q6K 量化结构体
 #[repr(C)]
 pub struct Q6K {
+    /// 低位量化值
     pub ql: [u8; _256 / 2],
+    /// 高位量化值
     pub qh: [u8; _256 / 4],
+    /// 局部缩放因子
     pub scales: [u8; _256 / 16],
+    /// 全局缩放因子
     pub delta: f16,
 }
 

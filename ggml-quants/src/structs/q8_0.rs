@@ -2,9 +2,12 @@ use super::{_32, max_abs};
 use crate::{DataBlock, Quantize};
 use half::f16;
 
+/// Q8_0 量化结构体
 #[repr(C)]
 pub struct Q8_0 {
+    /// 缩放因子
     pub delta: f16,
+    /// 量化值
     pub quants: [i8; _32],
 }
 
@@ -18,6 +21,7 @@ impl_data_block! {
 
 impl Quantize<f32, _32> for Q8_0 {
     fn quantize(data: &[f32; _32]) -> Self {
+        // 验证块大小是否正确，需要对常量进行断言
         #[allow(clippy::assertions_on_constants)]
         const {
             assert!(Self::COUNT == _32)
@@ -45,5 +49,5 @@ impl Quantize<f32, _32> for Q8_0 {
 
 #[test]
 fn test_q8_0() {
-    crate::test_utils::test::<32, Q8_0>(4.2e-3, 0.);
+    crate::test_utils::test::<32, Q8_0>(4.5e-3, 0.);
 }

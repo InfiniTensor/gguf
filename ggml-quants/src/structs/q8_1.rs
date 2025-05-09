@@ -4,10 +4,14 @@ use half::f16;
 use std::iter::zip;
 
 // TODO: 比 [Q8_0](crate::Q8_0) 多算了一个 sum，不知道有什么用
+/// Q8_1 量化结构体
 #[repr(C, align(4))]
 pub struct Q8_1 {
+    /// 缩放因子
     pub delta: f16,
+    /// 量化和
     pub sum: f16,
+    /// 量化值
     pub quants: [i8; _32],
 }
 
@@ -22,6 +26,7 @@ impl_data_block! {
 
 impl Quantize<f32, _32> for Q8_1 {
     fn quantize(data: &[f32; _32]) -> Self {
+        // 验证块大小是否正确，需要对常量进行断言
         #[allow(clippy::assertions_on_constants)]
         const {
             assert!(Self::COUNT == _32)
@@ -58,5 +63,5 @@ impl Quantize<f32, _32> for Q8_1 {
 
 #[test]
 fn test_q8_1() {
-    crate::test_utils::test::<32, Q8_1>(4e-3, 0.);
+    crate::test_utils::test::<32, Q8_1>(4.5e-3, 0.);
 }

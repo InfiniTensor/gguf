@@ -119,3 +119,40 @@ pub enum GGmlTokenType {
     Unused = 5,
     Byte = 6,
 }
+
+#[test]
+fn test_gguf_meta_data_value_type() {
+    assert_eq!(GGufMetaDataValueType::U8.name(), "u8");
+    assert_eq!(GGufMetaDataValueType::I8.name(), "i8");
+    assert_eq!(GGufMetaDataValueType::U16.name(), "u16");
+    assert_eq!(GGufMetaDataValueType::I16.name(), "i16");
+    assert_eq!(GGufMetaDataValueType::U32.name(), "u32");
+    assert_eq!(GGufMetaDataValueType::I32.name(), "i32");
+    assert_eq!(GGufMetaDataValueType::F32.name(), "f32");
+    assert_eq!(GGufMetaDataValueType::Bool.name(), "bool");
+    assert_eq!(GGufMetaDataValueType::String.name(), "str");
+    assert_eq!(GGufMetaDataValueType::Array.name(), "arr");
+    assert_eq!(GGufMetaDataValueType::I64.name(), "i64");
+    assert_eq!(GGufMetaDataValueType::F64.name(), "f64");
+    assert_eq!(GGufMetaDataValueType::U64.name(), "u64");
+}
+
+#[test]
+fn test_gguf_file_type() {
+    assert_eq!(GGufFileType::AllF32 as u32, 0);
+    assert_eq!(GGufFileType::MostlyF16 as u32, 1);
+    assert_eq!(GGufFileType::MostlyQ4_0 as u32, 2);
+    assert_eq!(GGufFileType::MostlyQ4_1 as u32, 3);
+    assert_eq!(GGufFileType::MostlyQ4_1SomeF16 as u32, 4);
+    assert_eq!(GGufFileType::MostlyQ8_0 as u32, 7);
+}
+
+#[test]
+fn test_ggml_token_type() {
+    assert_eq!(GGmlTokenType::Normal as i32, 1);
+    assert_eq!(GGmlTokenType::Unknown as i32, 2);
+    assert_eq!(GGmlTokenType::Control as i32, 3);
+    assert_eq!(GGmlTokenType::User as i32, 4);
+    assert_eq!(GGmlTokenType::Unused as i32, 5);
+    assert_eq!(GGmlTokenType::Byte as i32, 6);
+}

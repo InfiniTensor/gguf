@@ -216,3 +216,30 @@ fn test_name() {
     check("MiniCPM3-1B-sft-v0.0-F16.gguf");
     check("MiniCPM-V-Clip-1B-v2.6-F16.gguf");
 }
+
+#[test]
+fn test_name_shard() {
+    let name = GGufFileName::try_from("test-cases-00002-of-00005.gguf").unwrap();
+    assert_eq!(name.shard.index, NonZero::new(2).unwrap());
+    assert_eq!(name.shard.count, NonZero::new(5).unwrap());
+    assert_eq!(name.shard_count(), 5);
+    assert_eq!(name.iter_all().shard.index, NonZero::new(1).unwrap());
+}
+
+#[test]
+fn test_name_errors() {
+    assert!(GGufFileName::try_from("test-cases-00002-of-00005").is_err());
+    assert!(GGufFileName::try_from("test-cases-00002-of-00005.ggufx").is_err());
+    assert!(GGufFileName::try_from("test-cases-00002-of-00005.gguf.").is_err());
+    assert!(GGufFileName::try_from("test-cases-00002-of-00005.gguf.abc").is_err());
+}
+
+#[test]
+fn test_name_into_single() {
+    let name = GGufFileName::try_from("test-cases-00002-of-00005.gguf").unwrap();
+    assert_eq!(name.shard.index, NonZero::new(2).unwrap());
+    assert_eq!(name.shard.count, NonZero::new(5).unwrap());
+    let name = name.into_single();
+    assert_eq!(name.shard.index, NonZero::new(1).unwrap());
+    assert_eq!(name.shard.count, NonZero::new(1).unwrap());
+}

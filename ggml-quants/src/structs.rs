@@ -50,10 +50,13 @@ pub use q8_0::Q8_0;
 pub use q8_1::Q8_1;
 pub use q8_k::Q8K;
 
+/// 全局缩放因子和最小值
 #[derive(Clone, Copy, PartialEq, PartialOrd, Debug)]
 #[repr(C, align(4))]
 pub struct DeltaMin {
+    /// 缩放因子
     pub delta: f16,
+    /// 最小值
     pub min: f16,
 }
 

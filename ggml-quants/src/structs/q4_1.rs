@@ -2,9 +2,12 @@ use super::{_32, DeltaMin, min_max};
 use crate::{DataBlock, Quantize};
 use std::array::from_fn;
 
+/// Q4_1 量化结构体
 #[repr(C)]
 pub struct Q4_1 {
+    /// 全局缩放因子和最小值
     pub delta_min: DeltaMin,
+    /// 量化值
     pub quants: [u8; _32 / 2],
 }
 
@@ -18,6 +21,7 @@ impl_data_block! {
 
 impl Quantize<f32, _32> for Q4_1 {
     fn quantize(data: &[f32; _32]) -> Self {
+        // 验证块大小是否正确，需要对常量进行断言
         #[allow(clippy::assertions_on_constants)]
         const {
             assert!(Self::COUNT == _32)

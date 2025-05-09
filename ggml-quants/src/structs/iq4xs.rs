@@ -1,11 +1,16 @@
 use super::{_256, f16};
 use crate::{DataBlock, Quantize};
 
+/// IQ4XS 量化结构体
 #[repr(C)]
 pub struct IQ4XS {
+    /// 全局缩放因子
     pub delta: f16,
+    /// 高位缩放因子
     pub scales_h: u16,
+    /// 低位缩放因子
     pub scales_l: [u8; _256 / 64],
+    /// 量化值
     pub qs: [u16; _256 / 2],
 }
 

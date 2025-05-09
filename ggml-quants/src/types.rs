@@ -1,4 +1,7 @@
-﻿macro_rules! layout {
+﻿#![allow(missing_docs)]
+// 不必为每个 layout! 类型都添加文档
+
+macro_rules! layout {
     ($name:ident; $group:expr) => {
         digit_layout::layout!($name; [$group] in size_of::<crate::$name>() as _);
     };
