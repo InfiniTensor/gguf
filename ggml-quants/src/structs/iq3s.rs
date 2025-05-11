@@ -1,12 +1,18 @@
 use super::{_256, f16};
 use crate::{DataBlock, Quantize};
 
+/// IQ3S 量化结构体
 #[repr(C)]
 pub struct IQ3S {
+    /// 全局缩放因子
     pub delta: f16,
+    /// 低位量化值
     pub qs: [u8; _256 / 4],
+    /// 高位量化值
     pub qh: [u8; _256 / 32],
+    /// 符号位
     pub signs: [u8; _256 / 8],
+    /// 局部缩放因子
     pub scales: [u8; _256 / 64],
 }
 

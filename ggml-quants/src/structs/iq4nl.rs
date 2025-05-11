@@ -1,9 +1,12 @@
 use super::{_32, f16};
 use crate::{DataBlock, Quantize};
 
+/// IQ4NL 量化结构体
 #[repr(C)]
 pub struct IQ4NL {
+    /// 缩放因子
     pub delta: f16,
+    /// 量化值
     pub qs: [u16; _32 / 2],
 }
 

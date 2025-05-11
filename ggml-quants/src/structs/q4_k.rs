@@ -1,10 +1,14 @@
 use super::{_256, DeltaMin};
 use crate::{DataBlock, Quantize};
 
+/// Q4K 量化结构体
 #[repr(C)]
 pub struct Q4K {
+    /// 全局缩放因子和最小值
     pub delta_min: DeltaMin,
+    /// 局部缩放因子
     pub scales: [u8; 12],
+    /// 量化值
     pub qs: [u8; _256 / 2],
 }
 

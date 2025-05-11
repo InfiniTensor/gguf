@@ -76,3 +76,28 @@ impl<'a> GGufReader<'a> {
         Ok((self.read()?, self.read::<u64>()? as _))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read() {
+        let data: &[u8] = &[1, 2, 3, 4, 5];
+        let mut reader = GGufReader::new(data);
+        assert_eq!(reader.read::<u8>().unwrap(), 1);
+        assert_eq!(reader.read::<u8>().unwrap(), 2);
+        assert_eq!(reader.read::<u8>().unwrap(), 3);
+        assert_eq!(reader.read::<u8>().unwrap(), 4);
+        assert_eq!(reader.read::<u8>().unwrap(), 5);
+    }
+
+    #[test]
+    fn test_read_bool() {
+        let data: &[u8] = &[0, 1, 2];
+        let mut reader = GGufReader::new(data);
+        assert!(!reader.read_bool().unwrap());
+        assert!(reader.read_bool().unwrap());
+        assert!(matches!(reader.read_bool(), Err(GGufReadError::Bool(2))));
+    }
+}
