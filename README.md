@@ -9,5 +9,5 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/InfiniTensor/gguf)
 
 - [ggml 量化类型定义和转换算法](ggml-quants)
-- [gguf 文件定义和操作](ggml-quants)
+- [gguf 文件定义和操作](ggus)
 - [gguf 实用工具](xtask)

@@ -1,51 +1,57 @@
 //! See <https://github.com/ggerganov/ggml/blob/master/docs/gguf.md#standardized-key-value-pairs>.
 
+#![allow(missing_docs)]
+// ! This module provides types and constants for GGUF metadata handling.
+
 mod collection;
 mod meta_kv;
 
 pub use collection::{GGufMetaError, GGufMetaMap, GGufMetaMapExt};
 pub use meta_kv::{GGufMetaKV, GGufMetaValueArray};
 
+/// 默认对齐方式。
 pub const DEFAULT_ALIGNMENT: usize = 32;
+/// 表示对齐方式的键。
 pub const GENERAL_ALIGNMENT: &str = "general.alignment";
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(u32)]
 pub enum GGufMetaDataValueType {
-    /// The value is a 8-bit unsigned integer.
+    /// 8 位无符号整数。
     U8 = 0,
-    /// The value is a 8-bit signed integer.
+    /// 8 位有符号整数。
     I8 = 1,
-    /// The value is a 16-bit unsigned little-endian integer.
+    /// 16 位无符号小端整数。
     U16 = 2,
-    /// The value is a 16-bit signed little-endian integer.
+    /// 16 位有符号小端整数。
     I16 = 3,
-    /// The value is a 32-bit unsigned little-endian integer.
+    /// 32 位无符号小端整数。
     U32 = 4,
-    /// The value is a 32-bit signed little-endian integer.
+    /// 32 位有符号小端整数。
     I32 = 5,
-    /// The value is a 32-bit IEEE754 floating point number.
+    /// 32 位 IEEE754 浮点数。
     F32 = 6,
-    /// The value is a boolean.
+    /// bool 值。
     ///
-    /// 1-byte value where 0 is false and 1 is true.
-    /// Anything else is invalid, and should be treated as either the model being invalid or the reader being buggy.
+    /// 必须是 0 或 1，其他值未定义。
     Bool = 7,
-    /// The value is a UTF-8 non-null-terminated string, with length prepended.
+    /// 非空结尾的 UTF-8 字符串，长度预先指定。
     String = 8,
-    /// The value is an array of other values, with the length and type prepended.
+    /// 非字符类型的数组，长度和类型预先指定。
     ///
-    /// Arrays can be nested, and the length of the array is the number of elements in the array, not the number of bytes.
+    /// 数组可以嵌套；数组长度表示元素个数，而非字节数。
     Array = 9,
-    /// The value is a 64-bit unsigned little-endian integer.
+    /// 64 位无符号小端整数。
     U64 = 10,
-    /// The value is a 64-bit signed little-endian integer.
+    /// 64 位有符号小端整数。
     I64 = 11,
-    /// The value is a 64-bit IEEE754 floating point number.
+    /// 64 位 IEEE754 浮点数。
     F64 = 12,
 }
 
+/// [`GGufMetaDataValueType`] 获取和处理 GGUF 元数据值类型的相关信息。
 impl GGufMetaDataValueType {
+    /// 获取 GGUF 元数据值类型的名称。
     pub fn name(&self) -> &'static str {
         match self {
             Self::U8 => "u8",
@@ -65,6 +71,9 @@ impl GGufMetaDataValueType {
     }
 }
 
+/// GGUF 文件类型枚举。
+///
+/// 表示 GGUF 文件中使用的主要数据类型。
 #[derive(num_enum::TryFromPrimitive, Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(u32)]
 pub enum GGufFileType {
@@ -109,6 +118,7 @@ pub enum GGufFileType {
     // GUESSED = 1024  # not specified in the model file
 }
 
+/// 枚举 GGML 中的不同 token 类型。
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(i32)]
 pub enum GGmlTokenType {

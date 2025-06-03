@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![deny(warnings)]
+#![deny(warnings, missing_docs)]
 
 pub extern crate ggml_quants;
 

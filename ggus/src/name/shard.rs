@@ -1,6 +1,6 @@
 ﻿use std::{fmt, num::NonZero};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Shard {
     pub index: NonZero<u32>,
     pub count: NonZero<u32>,
