@@ -14,18 +14,32 @@ use version::Version;
 pub struct GGufFileName<'a> {
     /// 基础名称，通常是模型的名称。
     pub base_name: Cow<'a, str>,
-    /// 可选的大小标签，表示模型的大小。
+    /// 可选的模型规模信息。
     pub size_label: Option<SizeLabel>,
-    /// 可选的微调信息，表示模型的微调版本。
+    /// 可选的模型的微调版本信息。
     pub fine_tune: Cow<'a, str>,
-    /// 版本信息，表示 GGUF 文件的版本。
-    pub version: Version,
-    /// 可选的编码信息，表示模型的编码格式。
+    /// 可选的模型版本信息。
+    pub version: Option<Version>,
+    /// 可选的模型编码格式信息。
     pub encoding: Option<Cow<'a, str>>,
     /// 模型类型，表示 GGUF 文件的类型（如 LoRA、Vocab 等）。
     pub type_: Type,
     /// 分片信息，表示 GGUF 文件的分片索引和总数。
     pub shard: Shard,
+}
+
+impl Default for GGufFileName<'_> {
+    fn default() -> Self {
+        Self {
+            base_name: "model".into(),
+            size_label: None,
+            fine_tune: "".into(),
+            version: None,
+            encoding: None,
+            type_: Type::Default,
+            shard: Shard::default(),
+        }
+    }
 }
 
 mod pattern {
@@ -34,8 +48,8 @@ mod pattern {
 
     pub const NAME_: &str = r"-(\d+x)?(\d+)(\.\d+)?([QTBMK])(-\w+)?$";
     pub const VERSION_: &str = r"-v(\d+)\.(\d+)$";
-    pub const TYPE_LORA: &str = r"-LoRA";
-    pub const TYPE_VOCAB: &str = r"-vocab";
+    pub const TYPE_LORA: &str = "-LoRA";
+    pub const TYPE_VOCAB: &str = "-vocab";
     pub const SHARD_: &str = r"-(\d{5})-of-(\d{5})$";
     pub const EXT: &str = ".gguf";
 
@@ -64,12 +78,11 @@ impl<'a> TryFrom<&'a str> for GGufFileName<'a> {
                 Shard::new(index.parse().unwrap(), count.parse().unwrap())
             });
 
-        let name_no_shard = name;
-        let type_ = if name.ends_with(pattern::TYPE_VOCAB) {
-            name = &name[..name.len() - pattern::TYPE_VOCAB.len()];
+        let type_ = if let Some(base) = name.strip_suffix(pattern::TYPE_VOCAB) {
+            name = base;
             Type::Vocab
-        } else if name.ends_with(pattern::TYPE_LORA) {
-            name = &name[..name.len() - pattern::TYPE_LORA.len()];
+        } else if let Some(base) = name.strip_suffix(pattern::TYPE_LORA) {
+            name = base;
             Type::LoRA
         } else {
             Type::Default
@@ -77,10 +90,10 @@ impl<'a> TryFrom<&'a str> for GGufFileName<'a> {
 
         let Some((head, encoding)) = name.rsplit_once('-') else {
             return Ok(Self {
-                base_name: name_no_shard.into(),
+                base_name: name.into(),
                 size_label: None,
                 fine_tune: "".into(),
-                version: Version::DEFAULT,
+                version: None,
                 encoding: None,
                 type_,
                 shard,
@@ -88,13 +101,11 @@ impl<'a> TryFrom<&'a str> for GGufFileName<'a> {
         };
         name = head;
 
-        let version = pattern::VERSION
-            .captures(name)
-            .map_or(Version::DEFAULT, |capture| {
-                let (full, [major, minor]) = capture.extract();
-                name = &name[..name.len() - full.len()];
-                Version::new(major.parse().unwrap(), minor.parse().unwrap())
-            });
+        let version = pattern::VERSION.captures(name).map_or(None, |capture| {
+            let (full, [major, minor]) = capture.extract();
+            name = &name[..name.len() - full.len()];
+            Some(Version::new(major.parse().unwrap(), minor.parse().unwrap()))
+        });
 
         if let Some(capture) = pattern::NAME.captures(name) {
             let base_name = &name[..name.len() - capture.get(0).unwrap().len()];
@@ -121,10 +132,10 @@ impl<'a> TryFrom<&'a str> for GGufFileName<'a> {
             })
         } else {
             Ok(Self {
-                base_name: name_no_shard.into(),
+                base_name: name.into(),
                 size_label: None,
                 fine_tune: "".into(),
-                version: Version::DEFAULT,
+                version: None,
                 encoding: None,
                 type_,
                 shard,
@@ -142,6 +153,60 @@ impl<'a> TryFrom<&'a Path> for GGufFileName<'a> {
 }
 
 impl GGufFileName<'_> {
+    /// 尝试合并分片文件的名字，如果名字不匹配或冲突，返回 None。
+    pub fn merge_shards(names: &[Self]) -> Option<Self> {
+        match names {
+            [first, names @ ..] => {
+                let mut shards = vec![false; first.shard_count()];
+                shards[first.shard_index()] = true;
+                for name in names {
+                    if name.base_name != first.base_name
+                        || name.size_label != first.size_label
+                        || name.fine_tune != first.fine_tune
+                        || name.version != first.version
+                        || name.encoding != first.encoding
+                        || name.type_ != first.type_
+                        || name.shard_count() != first.shard_count()
+                        || shards[name.shard_index()]
+                    {
+                        return None;
+                    }
+                    shards[name.shard_index()] = true
+                }
+                let ans = Self {
+                    base_name: first.base_name.clone(),
+                    size_label: first.size_label,
+                    fine_tune: first.fine_tune.clone(),
+                    version: first.version,
+                    encoding: first.encoding.clone(),
+                    type_: first.type_,
+                    shard: Shard::default(),
+                };
+                Some(ans)
+            }
+            [] => None,
+        }
+    }
+
+    /// 拷贝文件名分片内容以隔离生命周期。
+    pub fn to_owned(&self) -> GGufFileName<'static> {
+        GGufFileName {
+            base_name: self.base_name.to_string().into(),
+            size_label: self.size_label,
+            fine_tune: self.fine_tune.to_string().into(),
+            version: self.version,
+            encoding: self.encoding.as_ref().map(|cow| cow.to_string().into()),
+            type_: self.type_,
+            shard: self.shard,
+        }
+    }
+
+    /// 返回从 0 到 count - 1 的分片序号。
+    #[inline]
+    pub fn shard_index(&self) -> usize {
+        (self.shard.index.get() - 1) as _
+    }
+
     /// 计算 GGUF 文件名的分片数量。
     #[inline]
     pub fn shard_count(&self) -> usize {
@@ -205,9 +270,11 @@ impl fmt::Display for GGufFileName<'_> {
         if !self.fine_tune.is_empty() {
             write!(f, "-{}", self.fine_tune)?
         }
-        write!(f, "-{}", self.version)?;
+        if let Some(version) = &self.version {
+            write!(f, "-{version}")?
+        }
         if let Some(encoding) = &self.encoding {
-            write!(f, "-{}", encoding)?
+            write!(f, "-{encoding}")?
         }
         write!(f, "{}", self.type_)?;
         write!(f, "{}", self.shard)?;
@@ -234,13 +301,13 @@ fn test_name() {
 fn test_name_types() {
     let vocab_name = GGufFileName::try_from("tokenizer-vocab.gguf").unwrap();
     assert!(matches!(vocab_name.type_, Type::Vocab));
-    assert_eq!(vocab_name.base_name, "tokenizer-vocab");
-    assert_eq!(vocab_name.to_string(), "tokenizer-vocab-v1.0-Vocab.gguf");
+    assert_eq!(vocab_name.base_name, "tokenizer");
+    assert_eq!(vocab_name.to_string(), "tokenizer-vocab.gguf");
 
     let lora_name = GGufFileName::try_from("adapter-LoRA.gguf").unwrap();
     assert!(matches!(lora_name.type_, Type::LoRA));
-    assert_eq!(lora_name.base_name, "adapter-LoRA");
-    assert_eq!(lora_name.to_string(), "adapter-LoRA-v1.0-LoRA.gguf");
+    assert_eq!(lora_name.base_name, "adapter");
+    assert_eq!(lora_name.to_string(), "adapter-LoRA.gguf");
 }
 
 #[test]

@@ -25,6 +25,7 @@ GGUF 是一种用于存储大型语言模型权重和元数据的文件格式，
 ## 主要特性
 
 该库的核心功能和特性包括：
+
 - 完整支持 GGUF 文件格式的读取和写入；
 - 高效的内存管理和数据访问；
 - 丰富的元数据处理功能；
@@ -51,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let header = GGufFileHeader::new(3, 0, 0);
 
     let mut writer = GGufFileWriter::new(file, header)?;
-    
+
     // 写入元数据
     writer.write_alignment(32)?;
     writer.write_meta_kv("general.architecture", GGufMetaDataValueType::String, b"llama\0")?;
@@ -70,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         0, 0, 160, 64,  // f32 = 5.0
         0, 0, 176, 64,  // f32 = 6.0
         0, 0, 192, 64,  // f32 = 8.0
-        0, 0, 208, 64,  // f32 = 6.5 
+        0, 0, 208, 64,  // f32 = 6.5
         0, 0, 224, 64,  // f32 = 7.0
         0, 0, 240, 64,  // f32 = 7.5
         0, 0, 0, 65,    // f32 = 8.0

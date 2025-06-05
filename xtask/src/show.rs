@@ -1,15 +1,9 @@
-use crate::{LogArgs, utils::compile_patterns};
-use ggus::{
-    GGufFileHeader, GGufFileName, GGufMetaDataValueType, GGufMetaKV, GGufReadError, GGufReader,
-};
+use crate::{LogArgs, list_files, utils::compile_patterns};
+use ggus::{GGufFileHeader, GGufMetaDataValueType, GGufMetaKV, GGufReadError, GGufReader};
 use indexmap::IndexMap;
 use memmap2::Mmap;
 use regex::Regex;
-use std::{
-    fmt,
-    fs::File,
-    path::{Path, PathBuf},
-};
+use std::{fmt, fs::File, path::Path};
 
 const YES: &str = "✔️  ";
 const ERR: &str = "❌  ";
@@ -17,10 +11,7 @@ const ERR: &str = "❌  ";
 #[derive(Args, Default)]
 pub struct ShowArgs {
     /// The file to show
-    file: PathBuf,
-    /// If set, show all shards in the directory
-    #[clap(long)]
-    shards: bool,
+    file_pattern: String,
     /// How many elements to show in arrays, `all` for all elements
     #[clap(long, short = 'n', default_value = "8")]
     array_detail: String,
@@ -40,8 +31,7 @@ struct Failed;
 impl ShowArgs {
     pub fn show(self) {
         let Self {
-            file,
-            shards,
+            file_pattern,
             array_detail,
             filter_meta,
             filter_tensor,
@@ -58,18 +48,7 @@ impl ShowArgs {
         let filter_meta = compile_patterns(&filter_meta);
         let filter_tensor = compile_patterns(&filter_tensor);
 
-        let files = if shards {
-            let dir = file.parent().unwrap();
-            GGufFileName::try_from(&*file)
-                .unwrap()
-                .iter_all()
-                .map(|name| dir.join(name.to_string()))
-                .collect::<Vec<_>>()
-        } else {
-            vec![file]
-        };
-
-        for path in files {
+        for path in list_files(&file_pattern) {
             let file = match File::open(&path) {
                 Ok(f) => unsafe { Mmap::map(&f) }.unwrap(),
                 Err(e) => {

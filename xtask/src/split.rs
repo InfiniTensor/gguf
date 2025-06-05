@@ -28,6 +28,6 @@ impl SplitArgs {
         }
 
         let files = operate(name, [&file], [], output.into()).unwrap();
-        show_file_info(&files);
+        show_file_info(&files)
     }
 }

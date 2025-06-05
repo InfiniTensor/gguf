@@ -1,15 +1,14 @@
 ﻿use std::fmt;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Version {
-    major: u32,
-    minor: u32,
+    pub major: u32,
+    pub minor: u32,
 }
 
 impl Version {
-    pub const DEFAULT: Self = Self { major: 1, minor: 0 };
-
-    pub fn new(major: u32, minor: u32) -> Self {
+    #[inline]
+    pub const fn new(major: u32, minor: u32) -> Self {
         Self { major, minor }
     }
 }

@@ -1,15 +1,13 @@
 use crate::{
-    LogArgs,
-    utils::OutputArgs,
-    utils::{Operator, operate, show_file_info},
+    LogArgs, list_files, merge_shards,
+    utils::{Operator, OutputArgs, operate, show_file_info},
 };
-use ggus::GGufFileName;
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 #[derive(Args, Default)]
 pub struct ConvertArgs {
     /// File to convert
-    file: PathBuf,
+    file_pattern: String,
     /// Steps to apply, separated by "->", maybe "sort", "permute-qk", "merge-linear", "split-linear", "to-llama:<extra>", "cast:<types>", "filter-meta:<key>" or "filter-tensor:<name>"
     #[clap(long, short = 'x')]
     steps: String,
@@ -23,18 +21,22 @@ pub struct ConvertArgs {
 impl ConvertArgs {
     pub fn convert(self) {
         let Self {
-            file,
+            file_pattern,
             steps,
             output,
             log,
         } = self;
         log.init();
 
-        let name = GGufFileName::try_from(&*file).unwrap();
-        let dir = file.parent().unwrap();
+        let files = list_files(&file_pattern).collect::<Vec<_>>();
+        if files.is_empty() {
+            println!("No such file.");
+            return;
+        }
+
         let files = operate(
-            name.clone(),
-            name.iter_all().map(|name| dir.join(name.to_string())),
+            merge_shards(&files).to_owned(),
+            files,
             steps.split("->").map(|op| match op.trim() {
                 "sort" => Operator::SortTensors,
                 "permute-qk" => Operator::PermuteQK,

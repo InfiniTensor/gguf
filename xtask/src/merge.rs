@@ -1,14 +1,13 @@
 use crate::{
-    LogArgs,
+    LogArgs, list_files, merge_shards,
     utils::{OutputConfig, operate, show_file_info},
 };
-use ggus::GGufFileName;
-use std::{ops::Deref, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Args, Default)]
 pub struct MergeArgs {
-    /// One of the shards to merge
-    file: PathBuf,
+    /// Glob pattern to match shards
+    file_pattern: String,
     /// Output directory for merged file
     #[clap(long, short)]
     output_dir: Option<PathBuf>,
@@ -23,23 +22,29 @@ pub struct MergeArgs {
 impl MergeArgs {
     pub fn merge(self) {
         let Self {
-            file,
+            file_pattern,
             output_dir,
             no_data,
             log,
         } = self;
         log.init();
 
-        let dir = file.parent().unwrap();
-        let name: GGufFileName = file.deref().try_into().unwrap();
-        if name.shard_count() == 1 {
-            println!("Model does not need to merge.");
-            return;
+        let files = list_files(&file_pattern).collect::<Vec<_>>();
+        match files.len() {
+            0 => {
+                println!("No such file");
+                return;
+            }
+            1 => {
+                println!("Files does not need to merge.");
+                return;
+            }
+            _ => {}
         }
 
         let files = operate(
-            name.clone(),
-            name.iter_all().map(|name| dir.join(name.to_string())),
+            merge_shards(&files).to_owned(),
+            files,
             [],
             OutputConfig {
                 dir: output_dir,
@@ -51,6 +56,6 @@ impl MergeArgs {
         )
         .unwrap();
 
-        show_file_info(&files);
+        show_file_info(&files)
     }
 }

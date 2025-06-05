@@ -1,6 +1,6 @@
 ﻿use std::{fmt, num::NonZeroU32};
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct SizeLabel {
     e: NonZeroU32,
     a: u32,

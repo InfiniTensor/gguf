@@ -52,6 +52,6 @@ impl SetMetaArgs {
         )
         .unwrap();
 
-        show_file_info(&files);
+        show_file_info(&files)
     }
 }

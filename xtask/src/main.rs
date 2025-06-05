@@ -10,7 +10,11 @@ mod utils;
 
 #[macro_use]
 extern crate clap;
+use std::path::Path;
+
 use clap::Parser;
+use ggus::GGufFileName;
+use log::warn;
 
 fn main() {
     use Commands::*;
@@ -83,4 +87,27 @@ impl LogArgs {
             .init()
             .unwrap();
     }
+}
+
+fn list_files(pattern: &str) -> impl Iterator<Item = std::path::PathBuf> {
+    glob::glob(pattern)
+        .unwrap()
+        .filter_map(|res| res.ok())
+        .filter(|p| {
+            log::trace!("glob match {}", p.display());
+            p.is_file() || p.is_symlink()
+        })
+}
+
+fn merge_shards<T: AsRef<Path>>(files: &[T]) -> GGufFileName {
+    files
+        .iter()
+        .map(|name| GGufFileName::try_from(name.as_ref().file_name().unwrap().to_str().unwrap()))
+        .collect::<Result<Vec<_>, _>>()
+        .ok()
+        .and_then(|names| GGufFileName::merge_shards(&names))
+        .unwrap_or_else(|| {
+            warn!("file names mismatch, use default name as output");
+            GGufFileName::default()
+        })
 }
