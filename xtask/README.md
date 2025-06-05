@@ -42,6 +42,14 @@ Options:
   -V, --version  Print version
 ```
 
+## 参数说明
+
+下述命令的描述中：
+
+- 所有 `<FILE>` 表示指定单个文件，可以是相对路径也可以是绝对路径；
+- 所有 `<FILE_PATTERN>` 表示 GLOB 通配符，即可以包含 `.`、`..`、`*` 和 `**` 等符号的文件通配符。
+  > **NOTICE** 部分 shell 会直接将通配符展开为多个路径再传递给进程，将导致参数数量错误。在这种 shell 中需要用引号包围通配符传入。
+
 ## 阅读内容
 
 ```shell
@@ -58,13 +66,12 @@ cargo show --help
 ```plaintext
 Show the contents of gguf files
 
-Usage: gguf-utils show [OPTIONS] <FILE>
+Usage: gguf-utils show [OPTIONS] <FILE_PATTERN>
 
 Arguments:
-  <FILE>  The file to show
+  <FILE_PATTERN>  The file to show
 
 Options:
-      --shards                         If set, show all shards in the directory
   -n, --array-detail <ARRAY_DETAIL>    How many elements to show in arrays, `all` for all elements [default: 8]
   -m, --filter-meta <FILTER_META>      Meta to show [default: *]
   -t, --filter-tensor <FILTER_TENSOR>  Tensors to show [default: *]
@@ -119,10 +126,10 @@ cargo merge --help
 ```plaintext
 Merge shards into a single gguf file
 
-Usage: gguf-utils merge [OPTIONS] <FILE>
+Usage: gguf-utils merge [OPTIONS] <FILE_PATTERN>
 
 Arguments:
-  <FILE>  One of the shards to merge
+  <FILE_PATTERN>  Glob pattern to match shards
 
 Options:
   -o, --output-dir <OUTPUT_DIR>  Output directory for merged file
@@ -147,10 +154,10 @@ cargo convert --help
 ```plaintext
 Convert gguf files to different format
 
-Usage: gguf-utils convert [OPTIONS] --steps <STEPS> <FILE>
+Usage: gguf-utils convert [OPTIONS] --steps <STEPS> <FILE_PATTERN>
 
 Arguments:
-  <FILE>  File to convert
+  <FILE_PATTERN>  File to convert
 
 Options:
   -x, --steps <STEPS>              Steps to apply, separated by "->", maybe "sort", "permute-qk", "merge-linear", "split-linear", "to-llama:<extra>", "cast:<types>", "filter-meta:<key>" or "filter-tensor:<name>"
