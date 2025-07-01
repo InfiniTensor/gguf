@@ -235,7 +235,7 @@ fn write_val(ty: Ty, val: impl AsRef<str>) -> (Ty, Vec<u8>) {
         Ty::Bool => match val {
             "true" => vec![1],
             "false" => vec![0],
-            _ => panic!("Invalid bool value: {}", val),
+            _ => panic!("Invalid bool value: {val}"),
         },
         Ty::String => {
             let mut vec = Vec::with_capacity(val.len() + size_of::<u64>());

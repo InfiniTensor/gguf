@@ -1576,10 +1576,8 @@ mod tests {
         assert!(result.is_err());
         if let Err(err) = result {
             match err {
-                GGufMetaError::ArrTypeMismatch(ty) => {
-                    assert_eq!(ty, Ty::U16);
-                }
-                _ => panic!("Expected ArrTypeMismatch, got {:?}", err),
+                GGufMetaError::ArrTypeMismatch(ty) => assert_eq!(ty, Ty::U16),
+                _ => panic!("Expected ArrTypeMismatch, got {err:?}"),
             }
         }
 

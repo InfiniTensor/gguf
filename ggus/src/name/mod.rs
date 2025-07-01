@@ -101,10 +101,10 @@ impl<'a> TryFrom<&'a str> for GGufFileName<'a> {
         };
         name = head;
 
-        let version = pattern::VERSION.captures(name).map_or(None, |capture| {
+        let version = pattern::VERSION.captures(name).map(|capture| {
             let (full, [major, minor]) = capture.extract();
             name = &name[..name.len() - full.len()];
-            Some(Version::new(major.parse().unwrap(), minor.parse().unwrap()))
+            Version::new(major.parse().unwrap(), minor.parse().unwrap())
         });
 
         if let Some(capture) = pattern::NAME.captures(name) {

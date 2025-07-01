@@ -264,7 +264,7 @@ fn fmt_meta_val(
             writeln!(f)?;
             writeln!(f, "   +--")?;
             for line in self.0.lines() {
-                writeln!(f, "   | {}", line)?;
+                writeln!(f, "   | {line}")?;
             }
             write!(f, "   +--")
         }

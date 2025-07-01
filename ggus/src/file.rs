@@ -418,7 +418,7 @@ mod tests {
 
         for (error, expected) in &errors {
             let mut s = String::new();
-            write!(s, "{}", error).unwrap();
+            write!(s, "{error}").unwrap();
             assert_eq!(&s, expected);
         }
     }
