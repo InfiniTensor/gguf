@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace logger from simple_logger 5.0 with flexi_logger 0.31;
+
 ## [0.3.0] - 2025-06-05
 
 ### Changed

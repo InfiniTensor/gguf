@@ -1,4 +1,4 @@
-// #![deny(warnings)]
+#![deny(warnings)]
 
 mod convert;
 mod diff;
@@ -10,11 +10,11 @@ mod utils;
 
 #[macro_use]
 extern crate clap;
-use std::path::Path;
 
 use clap::Parser;
 use ggus::GGufFileName;
 use log::warn;
+use std::path::Path;
 
 fn main() {
     use Commands::*;
@@ -61,31 +61,49 @@ struct LogArgs {
 
 impl LogArgs {
     fn init(self) {
-        use log::LevelFilter;
-        use simple_logger::SimpleLogger;
-        use time::UtcOffset;
+        use colored::{Color, Colorize};
+        use flexi_logger::DeferredNow;
+        use log::{Level, Record};
 
         let level = self
             .log
-            .and_then(|level| match level.to_lowercase().as_str() {
-                "off" | "none" => Some(LevelFilter::Off),
-                "all" | "trace" => Some(LevelFilter::Trace),
-                "debug" => Some(LevelFilter::Debug),
-                "info" => Some(LevelFilter::Info),
-                "error" => Some(LevelFilter::Error),
-                _ => None,
-            })
-            .unwrap_or(LevelFilter::Warn);
+            .map_or("info", |level| match level.to_lowercase().as_str() {
+                "all" | "trace" => "trace",
+                "debug" => "debug",
+                "info" => "info",
+                "error" | "off" | "none" => "error",
+                level => panic!("Unknown log level `{level}`"),
+            });
+        let config = format!("error, xtask={level}, ggus={level}");
 
-        const EAST8: UtcOffset = match UtcOffset::from_hms(8, 0, 0) {
-            Ok(it) => it,
-            Err(_) => unreachable!(),
-        };
-        SimpleLogger::new()
-            .with_level(level)
-            .with_utc_offset(UtcOffset::current_local_offset().unwrap_or(EAST8))
-            .init()
+        // <https://docs.rs/flexi_logger/0.30.1/flexi_logger/struct.LogSpecification.html>
+        flexi_logger::Logger::try_with_env_or_str(config)
+            .unwrap()
+            .format(log_format)
+            .start()
             .unwrap();
+
+        fn log_format(
+            w: &mut dyn std::io::Write,
+            now: &mut DeferredNow,
+            record: &Record,
+        ) -> Result<(), std::io::Error> {
+            let color = match record.level() {
+                Level::Error => Color::Red,
+                Level::Warn => Color::Yellow,
+                Level::Info => Color::Green,
+                Level::Debug => Color::BrightCyan,
+                Level::Trace => Color::BrightBlack,
+            };
+            write!(
+                w,
+                "{} {:<5} [{}] {}",
+                now.format_rfc3339().color(Color::BrightBlack),
+                record.level().to_string().color(color),
+                record.module_path().unwrap_or("<unnamed>"),
+                record.args().to_string().color(color),
+            )
+        }
     }
 }
 
