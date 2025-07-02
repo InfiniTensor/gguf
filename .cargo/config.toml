@@ -2,6 +2,7 @@
 xtask = "run --package gguf-utils --release --"
 debug = "run --package gguf-utils --"
 show = "xtask show"
+show-data = "xtask show-data"
 split = "xtask split"
 merge = "xtask merge"
 convert = "xtask convert"

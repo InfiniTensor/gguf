@@ -30,12 +30,13 @@ gguf-utils is a command-line tool for working with gguf files
 Usage: gguf-utils <COMMAND>
 
 Commands:
-  show      Show the contents of gguf files
-  split     Split gguf files into shards
-  merge     Merge shards into a single gguf file
-  convert   Convert gguf files to different format
-  set-meta  Set metadata of gguf files
-  help      Print this message or the help of the given subcommand(s)
+  show       Show the contents of gguf files
+  show-data  Show tensor data in gguf file
+  split      Split gguf files into shards
+  merge      Merge shards into a single gguf file
+  convert    Convert gguf files to different format
+  set-meta   Set metadata of gguf files
+  help       Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
@@ -50,7 +51,7 @@ Options:
 - 所有 `<FILE_PATTERN>` 表示 GLOB 通配符，即可以包含 `.`、`..`、`*` 和 `**` 等符号的文件通配符。
   > **NOTICE** 部分 shell 会直接将通配符展开为多个路径再传递给进程，将导致参数数量错误。在这种 shell 中需要用引号包围通配符传入。
 
-## 阅读内容
+## 展示内容
 
 ```shell
 gguf-utils show --help
@@ -75,8 +76,33 @@ Options:
   -n, --array-detail <ARRAY_DETAIL>    How many elements to show in arrays, `all` for all elements [default: 8]
   -m, --filter-meta <FILTER_META>      Meta to show [default: *]
   -t, --filter-tensor <FILTER_TENSOR>  Tensors to show [default: *]
-      --log <LOG>                      Log level, may be "off", "trace", "debug", "info" or "error"
   -h, --help                           Print help
+```
+
+## 展示张量数据
+
+```shell
+gguf-utils show-data --help
+```
+
+或
+
+```shell
+# in project dir
+cargo show-data --help
+```
+
+```plaintext
+Show tensor data in gguf file
+
+Usage: gguf-utils show-data <FILE> <TENSOR>
+
+Arguments:
+  <FILE>    Name of file to show
+  <TENSOR>  Name of tensor to show
+
+Options:
+  -h, --help  Print help
 ```
 
 ## 分片

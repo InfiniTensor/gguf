@@ -1,4 +1,4 @@
-use crate::{LogArgs, list_files, utils::compile_patterns};
+use crate::{list_files, utils::compile_patterns};
 use ggus::{GGufFileHeader, GGufMetaDataValueType, GGufMetaKV, GGufReadError, GGufReader};
 use indexmap::IndexMap;
 use memmap2::Mmap;
@@ -21,9 +21,6 @@ pub struct ShowArgs {
     /// Tensors to show
     #[clap(long, short = 't', default_value = "*")]
     filter_tensor: String,
-
-    #[clap(flatten)]
-    log: LogArgs,
 }
 
 struct Failed;
@@ -35,9 +32,7 @@ impl ShowArgs {
             array_detail,
             filter_meta,
             filter_tensor,
-            log,
         } = self;
-        log.init();
 
         let detail = match array_detail.trim().to_lowercase().as_str() {
             "all" => usize::MAX,

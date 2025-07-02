@@ -5,6 +5,7 @@ mod diff;
 mod merge;
 mod set_meta;
 mod show;
+mod show_data;
 mod split;
 mod utils;
 
@@ -20,6 +21,7 @@ fn main() {
     use Commands::*;
     match Cli::parse().command {
         Show(args) => args.show(),
+        ShowData(args) => args.show(),
         Split(args) => args.split(),
         Merge(args) => args.merge(),
         Convert(args) => args.convert(),
@@ -40,6 +42,8 @@ struct Cli {
 enum Commands {
     /// Show the contents of gguf files
     Show(show::ShowArgs),
+    /// Show tensor data in gguf file
+    ShowData(show_data::ShowDataArgs),
     /// Split gguf files into shards
     Split(split::SplitArgs),
     /// Merge shards into a single gguf file
