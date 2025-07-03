@@ -17,7 +17,7 @@ pub(crate) enum Operator {
     Cast(HashMap<String, GGmlType>),
     ToLlama(HashMap<String, String>),
     MergeLinear(bool),
-    PermuteQK,
+    PermuteQK(bool),
     SortTensors,
     SetMeta(HashMap<String, (GGufMetaDataValueType, Vec<u8>)>),
 }
@@ -36,7 +36,8 @@ impl fmt::Display for Operator {
                     write!(f, "split-linear")
                 }
             }
-            Self::PermuteQK => write!(f, "permute-qk"),
+            Self::PermuteQK(true) => write!(f, "permute-qk"),
+            Self::PermuteQK(false) => write!(f, "permute-qk-rev"),
             Self::SortTensors => write!(f, "sort-tensors"),
             Self::SetMeta(map) => write!(f, "set-meta: {} items", map.len()),
         }
@@ -64,7 +65,7 @@ impl Content<'_> {
             FilterTensorName(r) => self.tensors.retain(|k, _| r.is_match(k)),
             Cast(types) => self.cast(types),
             MergeLinear(ty) => self.merge_linear(ty),
-            PermuteQK => self.permute_qk(),
+            PermuteQK(ty) => self.permute_qk(ty),
             SortTensors => self.sort_tensors(),
             SetMeta(map) => self.set_meta(map),
         }

@@ -39,7 +39,8 @@ impl ConvertArgs {
             files,
             steps.split("->").map(|op| match op.trim() {
                 "sort" => Operator::SortTensors,
-                "permute-qk" => Operator::PermuteQK,
+                "permute-qk" => Operator::PermuteQK(true),
+                "permute-qk-rev" | "!permute-qk" => Operator::PermuteQK(false),
                 "merge-linear" => Operator::MergeLinear(true),
                 "split-linear" | "!merge-linear" => Operator::MergeLinear(false),
                 "to-llama" => Operator::ToLlama(HashMap::new()),

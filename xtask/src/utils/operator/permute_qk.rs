@@ -10,7 +10,7 @@ use regex::Regex;
 use std::sync::LazyLock;
 
 impl Content<'_> {
-    pub(super) fn permute_qk(&mut self) {
+    pub(super) fn permute_qk(&mut self, direction: bool) {
         let nh = self.llm_attention_head_count().unwrap();
         let nkvh = match self.llm_attention_head_count_kv() {
             Ok(val) => val,
@@ -25,12 +25,12 @@ impl Content<'_> {
 
             let tensor = if let Some(captures) = QK_REGEX.captures(&name) {
                 match &captures[1] {
-                    "attn_q" => permute_qk(tensor, nh),
-                    "attn_k" => permute_qk(tensor, nkvh),
+                    "attn_q" => permute_qk(tensor, nh, !direction),
+                    "attn_k" => permute_qk(tensor, nkvh, !direction),
                     "attn_qkv" => {
                         let [q, k, v] = split_qkv(tensor, nh, nkvh);
-                        let q = permute_qk(q, nh);
-                        let k = permute_qk(k, nkvh);
+                        let q = permute_qk(q, nh, !direction);
+                        let k = permute_qk(k, nkvh, !direction);
                         merge_qkv([Some(q), Some(k), Some(v)]).1
                     }
                     _ => unreachable!(),
@@ -43,7 +43,7 @@ impl Content<'_> {
     }
 }
 
-fn permute_qk(tensor: Tensor, nh: usize) -> Tensor {
+fn permute_qk(tensor: Tensor, nh: usize, rev: bool) -> Tensor {
     let Tensor { ty, shape, data } = tensor;
     let [c, r] = match &*shape {
         &[r] => [1, r],
@@ -53,9 +53,15 @@ fn permute_qk(tensor: Tensor, nh: usize) -> Tensor {
     let c = ty.size().elements_to_bytes(&[c]);
     let r = r as usize;
 
+    let tiles = if rev {
+        [2, r / nh / 2, nh]
+    } else {
+        [r / nh / 2, 2, nh]
+    };
+
     type Layout = mem_rearrange::ndarray_layout::ArrayLayout<4>;
     let src = Layout::new_contiguous(&[c, r], LittleEndian, 1)
-        .tile_le(1, &[r / nh / 2, 2, nh])
+        .tile_le(1, &tiles)
         .transpose(&[2, 1]);
     let dst = Layout::new_contiguous(src.shape(), LittleEndian, 1);
     let rearrange = Rearranging::new(&dst, &src, 1).unwrap();
