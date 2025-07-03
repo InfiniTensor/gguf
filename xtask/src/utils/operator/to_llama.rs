@@ -6,6 +6,7 @@ use ggus::{
     DataFuture, GGmlType, GGufMetaError, GGufMetaMapExt,
     ggml_quants::{bf16, f16},
 };
+use log::warn;
 use memmap2::MmapMut;
 use regex::Regex;
 use std::{alloc::Layout, collections::HashMap, ops::MulAssign, sync::LazyLock};
@@ -61,7 +62,14 @@ fn from_minicpm(content: &mut Content, extra: HashMap<String, String>) {
         }
     }
     let embd_scale = embd_scale.expect(ERR_MSG);
-    let res_scale = res_scale.expect(ERR_MSG) / (nblk as f64).sqrt();
+    let mut res_scale = res_scale.expect(ERR_MSG);
+    let common_res_scale = 1.4 / (nblk as f64).sqrt();
+    if (res_scale - 1.4).abs() < 10. * f64::EPSILON {
+        res_scale = common_res_scale;
+        warn!("residual scale in meta is 1.4, use {res_scale:.3} = 1.4 / √{nblk}")
+    } else if (res_scale - common_res_scale).abs() >= 10. * f64::EPSILON {
+        warn!("residual scale in meta is neither 1.4 nor 1.4 / √nblk")
+    }
 
     for (name, tensor) in content.tensors.iter_mut() {
         static BLK_TENSOR_REGEX: LazyLock<Regex> =
