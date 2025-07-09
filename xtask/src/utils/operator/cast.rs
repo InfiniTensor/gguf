@@ -28,7 +28,7 @@ impl Operator {
 impl Content<'_> {
     pub(super) fn cast(&mut self, types: HashMap<String, Ty>) {
         match self.general_architecture().unwrap() {
-            "llama" | "gpt2" | "qwen2" => {
+            "llama" | "gpt2" | "qwen2" | "qwen3" => {
                 let [linear, embd, norm, else_] =
                     ["linear", "embd", "norm", "else"].map(|name| types.get(name).copied());
                 self.cast_(linear, |name, shape| {
