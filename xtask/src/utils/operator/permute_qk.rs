@@ -22,6 +22,8 @@ impl Content<'_> {
         for (name, tensor) in tensors {
             static QK_REGEX: LazyLock<Regex> =
                 LazyLock::new(|| Regex::new(r"(attn_q|attn_k|attn_qkv)\.(weight|bias)$").unwrap());
+            static QK_NORM_REGEX: LazyLock<Regex> =
+                LazyLock::new(|| Regex::new(r"(attn_q_norm|attn_k_norm)\.(weight)$").unwrap());
 
             let tensor = if let Some(captures) = QK_REGEX.captures(&name) {
                 match &captures[1] {
@@ -35,6 +37,8 @@ impl Content<'_> {
                     }
                     _ => unreachable!(),
                 }
+            } else if QK_NORM_REGEX.is_match(&name) {
+                permute_qk_norm(tensor, !direction)
             } else {
                 tensor
             };
@@ -58,6 +62,32 @@ fn permute_qk(tensor: Tensor, nh: usize, rev: bool) -> Tensor {
     } else {
         [r / nh / 2, 2, nh]
     };
+
+    type Layout = mem_rearrange::ndarray_layout::ArrayLayout<4>;
+    let src = Layout::new_contiguous(&[c, r], LittleEndian, 1)
+        .tile_le(1, &tiles)
+        .transpose(&[2, 1]);
+    let dst = Layout::new_contiguous(src.shape(), LittleEndian, 1);
+    let rearrange = Rearranging::new(&dst, &src, 1).unwrap();
+
+    let data = DataPromise::lazy(move || {
+        let mut ans = MmapMut::map_anon(c * r).unwrap();
+        unsafe { rearrange.launch(ans.as_mut_ptr(), data.get().as_ptr()) };
+        ans
+    });
+    Tensor { ty, shape, data }
+}
+
+fn permute_qk_norm(tensor: Tensor, rev: bool) -> Tensor {
+    let Tensor { ty, shape, data } = tensor;
+    let [r] = match &*shape {
+        &[r] => [r],
+        [..] => todo!("permute_qk_norm only supports 1D tensors"),
+    };
+    let c = ty.size().elements_to_bytes(&[1]);
+    let r = r as usize;
+
+    let tiles = if rev { [2, r / 2] } else { [r / 2, 2] };
 
     type Layout = mem_rearrange::ndarray_layout::ArrayLayout<4>;
     let src = Layout::new_contiguous(&[c, r], LittleEndian, 1)
