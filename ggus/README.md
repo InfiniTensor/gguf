@@ -43,52 +43,60 @@ use ggus::{
     DataFuture, GGufFileHeader, GGufFileWriter, GGufMetaDataValueType, GGufTensorWriter, GGmlType,
     GGufReader, GGufReadError,
 };
+use memmap2::Mmap;
 use std::fs::File;
-use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    const FILE_NAME: &str = "new_model.gguf";
+
     // ========== 写入部分 ==========
-    let file = File::create("new_model.gguf")?;
+    let file = File::create(FILE_NAME)?;
     let header = GGufFileHeader::new(3, 0, 0);
 
     let mut writer = GGufFileWriter::new(file, header)?;
 
     // 写入元数据
     writer.write_alignment(32)?;
-    writer.write_meta_kv("general.architecture", GGufMetaDataValueType::String, b"llama\0")?;
+    writer.write_meta_kv(
+        "general.architecture",
+        GGufMetaDataValueType::String,
+        b"llama\0",
+    )?;
     writer.write_meta_kv("general.name", GGufMetaDataValueType::String, b"My Model\0")?;
-    writer.write_meta_kv("llm.context_length", GGufMetaDataValueType::U32, &2048u32.to_le_bytes())?;
+    writer.write_meta_kv(
+        "llm.context_length",
+        GGufMetaDataValueType::U32,
+        &2048u32.to_le_bytes(),
+    )?;
 
     // 写入张量
     let mut tensor_writer = writer.finish::<Vec<u8>>(true);
     let shape = [4, 4];
     let data_bytes = vec![
-        1u8, 0, 0, 0,   // f32 = 1.0 little endian
-        0, 0, 128, 63,  // f32 = 1.0
-        0, 0, 0, 64,    // f32 = 2.0
-        0, 0, 64, 64,   // f32 = 3.0
-        0, 0, 128, 64,  // f32 = 4.0
-        0, 0, 160, 64,  // f32 = 5.0
-        0, 0, 176, 64,  // f32 = 6.0
-        0, 0, 192, 64,  // f32 = 8.0
-        0, 0, 208, 64,  // f32 = 6.5
-        0, 0, 224, 64,  // f32 = 7.0
-        0, 0, 240, 64,  // f32 = 7.5
-        0, 0, 0, 65,    // f32 = 8.0
-        0, 0, 16, 65,   // f32 = 9.0
-        0, 0, 32, 65,   // f32 = 10.0
-        0, 0, 48, 65,   // f32 = 11.0
-        0, 0, 64, 65,   // f32 = 12.0
+        1u8, 0,   0,  0, // f32 = 1.0 little endian
+          0, 0, 128, 63, // f32 = 1.0
+          0, 0,   0, 64, // f32 = 2.0
+          0, 0,  64, 64, // f32 = 3.0
+          0, 0, 128, 64, // f32 = 4.0
+          0, 0, 160, 64, // f32 = 5.0
+          0, 0, 176, 64, // f32 = 6.0
+          0, 0, 192, 64, // f32 = 8.0
+          0, 0, 208, 64, // f32 = 6.5
+          0, 0, 224, 64, // f32 = 7.0
+          0, 0, 240, 64, // f32 = 7.5
+          0, 0,   0, 65, // f32 = 8.0
+          0, 0,  16, 65, // f32 = 9.0
+          0, 0,  32, 65, // f32 = 10.0
+          0, 0,  48, 65, // f32 = 11.0
+          0, 0,  64, 65, // f32 = 12.0
     ];
 
     tensor_writer.write_tensor("weight", GGmlType::F32, &shape, data_bytes)?;
     tensor_writer.finish()?;
 
     // ========== 读取部分 ==========
-    let data = std::fs::read("new_model.gguf")?;
-    let file_name = std::path::Path::new("new_model.gguf").file_name().unwrap().to_str().unwrap();
-    println!("文件名: {file_name}\n");
-
+    let file = File::open(FILE_NAME)?;
+    let data = unsafe { Mmap::map(&file) }?;
     let mut reader = GGufReader::new(&data);
     let header = match reader.read_header() {
         Ok(h) => h,

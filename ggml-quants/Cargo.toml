@@ -21,7 +21,7 @@ types = ["digit-layout"]
 
 [dependencies]
 digit-layout = { version = "0.3", optional = true }
-rayon = "1.10"
+rayon = "1.11"
 half = "2.6"
 
 [dev-dependencies]

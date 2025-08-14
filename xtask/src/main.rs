@@ -121,7 +121,7 @@ fn list_files(pattern: &str) -> impl Iterator<Item = std::path::PathBuf> {
         })
 }
 
-fn merge_shards<T: AsRef<Path>>(files: &[T]) -> GGufFileName {
+fn merge_shards<T: AsRef<Path>>(files: &[T]) -> GGufFileName<'_> {
     files
         .iter()
         .map(|name| GGufFileName::try_from(name.as_ref().file_name().unwrap().to_str().unwrap()))

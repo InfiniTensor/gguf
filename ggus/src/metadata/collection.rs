@@ -103,7 +103,7 @@ pub trait GGufMetaMapExt: GGufMetaMap {
     }
 
     /// 获取字符串数组类型的元数据键值对。
-    fn get_str_arr(&self, key: &str) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn get_str_arr(&self, key: &str) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         let (ty, val) = self.get(key).ok_or(GGufMetaError::NotExist)?;
         let mut reader = GGufReader::new(val);
         let (ty, len) = match ty {
@@ -118,7 +118,7 @@ pub trait GGufMetaMapExt: GGufMetaMap {
     }
 
     /// 获取 i32 数组类型的元数据键值对。
-    fn get_i32_arr(&self, key: &str) -> Result<GGufMetaValueArray<i32>, GGufMetaError> {
+    fn get_i32_arr(&self, key: &str) -> Result<GGufMetaValueArray<'_, i32>, GGufMetaError> {
         let (ty, val) = self.get(key).ok_or(GGufMetaError::NotExist)?;
         let mut reader = GGufReader::new(val);
         let (ty, len) = match ty {
@@ -133,7 +133,7 @@ pub trait GGufMetaMapExt: GGufMetaMap {
     }
 
     /// 获取 f32 数组类型的元数据键值对。
-    fn get_f32_arr(&self, key: &str) -> Result<GGufMetaValueArray<f32>, GGufMetaError> {
+    fn get_f32_arr(&self, key: &str) -> Result<GGufMetaValueArray<'_, f32>, GGufMetaError> {
         let (ty, val) = self.get(key).ok_or(GGufMetaError::NotExist)?;
         let mut reader = GGufReader::new(val);
         let (ty, len) = match ty {
@@ -268,19 +268,19 @@ pub trait GGufMetaMapExt: GGufMetaMap {
 
     /// 获取标签。
     #[inline]
-    fn general_tags(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn general_tags(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("general.tags")
     }
 
     /// 获取语言。
     #[inline]
-    fn general_languages(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn general_languages(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("general.languages")
     }
 
     /// 获取数据集。
     #[inline]
-    fn general_datasets(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn general_datasets(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("general.datasets")
     }
 
@@ -589,31 +589,31 @@ pub trait GGufMetaMapExt: GGufMetaMap {
 
     /// 获取 ggml 分词器的词汇表。
     #[inline]
-    fn tokenizer_ggml_tokens(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn tokenizer_ggml_tokens(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("tokenizer.ggml.tokens")
     }
 
     /// 获取 ggml 分词器的分数。
     #[inline]
-    fn tokenizer_ggml_scores(&self) -> Result<GGufMetaValueArray<f32>, GGufMetaError> {
+    fn tokenizer_ggml_scores(&self) -> Result<GGufMetaValueArray<'_, f32>, GGufMetaError> {
         self.get_f32_arr("tokenizer.ggml.scores")
     }
 
     /// 获取 ggml 分词器的 token 类型。
     #[inline]
-    fn tokenizer_ggml_token_type(&self) -> Result<GGufMetaValueArray<i32>, GGufMetaError> {
+    fn tokenizer_ggml_token_type(&self) -> Result<GGufMetaValueArray<'_, i32>, GGufMetaError> {
         self.get_i32_arr("tokenizer.ggml.token_type")
     }
 
     /// 获取 ggml 分词器的合并规则。
     #[inline]
-    fn tokenizer_ggml_merges(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn tokenizer_ggml_merges(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("tokenizer.ggml.merges")
     }
 
     /// 获取 ggml 分词器的添加的 token。
     #[inline]
-    fn tokenizer_ggml_added_tokens(&self) -> Result<GGufMetaValueArray<str>, GGufMetaError> {
+    fn tokenizer_ggml_added_tokens(&self) -> Result<GGufMetaValueArray<'_, str>, GGufMetaError> {
         self.get_str_arr("tokenizer.ggml.added_tokens")
     }
 

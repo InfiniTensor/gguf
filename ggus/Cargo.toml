@@ -21,3 +21,6 @@ num_enum = "0.7"
 [features]
 default = ["types"]
 types = ["ggml-quants/types"]
+
+[dev-dependencies]
+memmap2.workspace = true
